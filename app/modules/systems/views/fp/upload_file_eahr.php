@@ -1,0 +1,482 @@
+<style>
+    .datepicker table {
+        width: 100%;
+    }
+    .ui-datepicker-calendar {
+        display: none;
+    }
+</style>
+<script>
+    $(document).ready(function() {
+        $("#success-alert").fadeTo(2000, 500).slideUp(500, function(){
+            $("#success-alert").slideUp(500);
+        });
+    });
+</script>
+<div class="row page-titles">
+    <div class="col-md-5 align-self-center">
+        <h4 class="text-themecolor"></h4>
+    </div>
+    <div class="col-md-7 align-self-center text-right">
+        <div class="d-flex justify-content-end align-items-center">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="javascript:;">Home</a></li>
+                <li class="breadcrumb-item active">FP files</li>
+            </ol>
+        </div>
+    </div>
+</div>
+<div>
+    <?php
+    if ($this->session->userdata('success') != "") {
+        ?>
+        <div id="success-alert" class="alert alert-success"><?php echo $this->session->userdata('success'); ?></div>
+        <?php $this->session->set_userdata('success', "");
+    }
+    ?>
+    <?php
+    if ($this->session->userdata('error_msg') != "") {
+        ?>
+        <div id="success-alert" class="alert alert-danger"><?php echo $this->session->userdata('error_msg'); ?></div>
+        <?php $this->session->set_userdata('error_msg', "");
+    }
+    ?>
+</div>
+<div class="row">
+    <div class="col-12">
+        <div class="element-wrapper">
+            <div class="card-header bg-info page-head-title-wrap">
+                <h4 class="page-head-title card-title  text-white" style="display: inline-block"> Fingerprint File Data Management</h4>
+                <div class="d-flex justify-content-end align-items-center">
+                    <button type="button" class="btn btn-success pull-right" data-toggle="modal" data-target="#upload_file"><i class="fa fa-plus-circle"></i> Upload CSV File</button>
+                    <button type="button" class="btn btn-success pull-right" data-toggle="modal" data-target="#upload_file_new"><i class="fa fa-plus-circle"></i> Upload CSV File (From USB Direct)</button>
+                    <button type="button" class="btn btn-success pull-right" onclick="Process_Data()" ><i class="fa fa-plus-circle"></i> Process Uploaded Data</button>
+                </div>
+            </div>
+            <div class="element-box">
+                <!-- Nav tabs -->
+                <ul class="nav nav-tabs" role="tablist">
+                    <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#tab_1" role="tab"><i class="fa fa-list" style="font-size: 18px;margin-right: 5px"></i>  FP Raw Data</a></li>
+                    <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#tab_2" role="tab"><i class="fa fa-file-excel-o" style="font-size: 18px;margin-right: 5px"></i>  FP Uploaded Files</a></li>
+                </ul>
+                <!-- Tab panes -->
+                <div class="tab-content tabcontent-border">
+                    <div class="tab-pane active" id="tab_1" role="tabpanel">
+                        <div class="portlet yellow-crusta box">
+                            <div class="portlet-title">
+                            </div>
+                            <div class="portlet-body">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="box">
+                                            <!-- /.box-header -->
+                                            <div class="box-body">
+                                                <table id="datatableFP" class="table table-bordered table-striped">
+                                                    <thead>
+                                                    <tr>
+                                                        <th>Date</th>
+                                                        <th>Emp #</th>
+                                                        <th>FName</th><th>LName</th>
+                                                        <th>Time</th>
+                                                        <!--<th>Posting</th>-->
+                                                    </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane  p-20" id="tab_2" role="tabpanel">
+                        <div class="portlet blue-hoki box">
+                            <div class="portlet-title">
+                            </div>
+                            <div class="portlet-body">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="box">
+                                            <div class="box-body">
+                                                <table id="datatable1" class="table table-bordered table-striped">
+                                                    <thead>
+                                                    <tr>
+                                                        <th>Date</th>
+                                                        <th>Name</th>
+                                                    </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                    <?php
+                                                    foreach($files as $value){
+                                                        ?>
+                                                        <tr>
+                                                            <td><?php echo $value->name; ?></td>
+                                                            <td><?php echo $value->date; ?></td>
+                                                        </tr>
+                                                    <?php } ?>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--UPLOAD MODAL-->
+<div class="modal fade" id="upload_file"  data-backdrop="static" and data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="myModalLabel">Upload CSV File</h3>
+                <button type="button" class="close warp_form" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <form id="upload_file_form" enctype='multipart/form-data' class="form-horizontal" role="form">
+                <input type="hidden" name="<?php echo $this->security->get_csrf_token_name(); ?>" value="<?php echo $this->security->get_csrf_hash(); ?>">
+                <div class="modal-body">
+                    <div class="loading_upload_data" style="text-align: center; display: none">
+                        <h4> Uploading Data, Please Wait.......</h4>
+                        <img style="width: 80px; padding: 10px" src="<?php echo base_url('assets/images/hourglass.svg')?>" >
+                    </div>
+                    <div class="warp_form">
+                        <p>
+                            Support only csv, dat, txt file extensions <a href="<?php echo base_url(); ?>assets/data/fp_sample_software_export.txt"  target="_blank" class="pull-right btn btn-sm btn-default">View Sample FP File</a>
+                        </p>
+                        <div class="form-group">
+                            <label for="sun_all_mass">Select Month: </label>
+                            <input type="text" class="month_select" name="raw_upload_month" id="raw_upload_month"/>
+                        </div>
+                        <div class="form-group">
+                            <label for="file_upload">File input</label>
+                            <input type="file" id="file_upload" name="file_upload">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer warp_form">
+                    <input type="submit" id="UploadRawData" name="submit" class="btn btn-success" value="Upload File">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="upload_file_new"  data-backdrop="static" and data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="myModalLabel">Upload CSV File  (From USB)</h3>
+                <button type="button" class="close warp_form" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <form id="upload_file_new_form" enctype='multipart/form-data' class="form-horizontal" role="form">
+                <input type="hidden" name="<?php echo $this->security->get_csrf_token_name(); ?>" value="<?php echo $this->security->get_csrf_hash(); ?>">
+                <div class="modal-body">
+                    <div class="loading_upload_data_new" style="text-align: center; display: none">
+                        <h4> Uploading Data, Please Wait.......</h4>
+                        <img style="width: 80px; padding: 10px" src="<?php echo base_url('assets/images/hourglass.svg')?>" >
+                    </div>
+                    <div class="warp_form_new">
+                        <p>
+                            Support only csv, dat, txt file extensions <a href="<?php echo base_url(); ?>assets/data/fp_sample_usb.txt"  target="_blank" class="pull-right btn btn-sm btn-default">View Sample FP File</a>
+                        </p>
+                        <div class="form-group">
+                            <label for="sun_all_mass">Select Month: </label>
+                            <input type="text" class="month_select" name="raw_upload_month_new" id="raw_upload_month_new"/>
+                        </div>
+                        <div class="form-group">
+                            <label for="file_upload">File input</label>
+                            <input type="file" id="file_upload_new" name="file_upload_new">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer warp_form_new">
+                    <input type="submit" id="UploadRawDataNew" name="submit" class="btn btn-success" value="Upload File">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="posting_data_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="myModalLabel"></h3>
+                <button type="button" class="close hide_btn_modal" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group hide_btn_modal">
+                    <label for="sun_all_mass">Select Month: </label>
+                    <input type="text" class="month_select" name="date_select" id="date_select"/>
+                </div>
+                <div id="loading" style="text-align: center; display: none">
+                    <h4>  Posting Data, Please Wait...........</h4>
+                    <img style="width: 80px; padding: 10px" src="<?php echo base_url('assets/images/hourglass.svg')?>" >
+                </div>
+                <input type="button" class="btn btn-primary hide_btn_modal" id="savePosting" value="Posting"/>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default hide_btn_modal" data-dismiss="modal" >Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        datatableFP_table = $('#datatableFP').DataTable({
+            "processing": true,
+            "serverSide": true,
+            "searching": true,
+            "ajax": {
+                "data": {
+                    "<?php echo $this->security->get_csrf_token_name(); ?>": "<?php echo $this->security->get_csrf_hash(); ?>"
+                },
+                "url": "<?php echo site_url('systems/file_upload_con/ajax_list_fp_raw_Data')?>",
+                "type": "POST"
+            },
+            "columnDefs": [
+                {
+                    "targets": [-1],
+                    "orderable": [
+                        [0, 'desc']
+                    ],
+                }
+            ],
+            "language": {
+                "aria": {
+                    "sortAscending": ": activate to sort column ascending",
+                    "sortDescending": ": activate to sort column descending"
+                },
+                "emptyTable": "No data available in table",
+                "info": "Showing _START_ to _END_ of _TOTAL_ entries",
+                "infoEmpty": "No entries found",
+                "infoFiltered": "(filtered1 from _MAX_ total entries)",
+                "lengthMenu": "_MENU_ entries",
+                "search": "Search:",
+                "zeroRecords": "No matching records found"
+            },
+            "buttons": [
+                { extend: 'print', text:      '<i class="fa fa-print"></i>',
+                    titleAttr: 'Print' },
+                {
+                    extend:    'copyHtml5',
+                    text:      '<i class="fa fa-files-o"></i>',
+                    titleAttr: 'Copy'
+                },
+                {
+                    extend:    'excelHtml5',
+                    text:      '<i class="fa fa-file-excel-o"></i>',
+                    titleAttr: 'Excel'
+                },
+                {
+                    extend:    'csvHtml5',
+                    text:      '<i class="fa fa-file-text-o"></i>',
+                    titleAttr: 'CSV'
+                },
+                {
+                    extend:    'pdfHtml5',
+                    text:      '<i class="fa fa-file-pdf-o"></i>',
+                    titleAttr: 'PDF'
+                }
+            ],
+            responsive: true,
+            "order": [
+                [0, 'desc']
+            ],
+            "lengthMenu": [
+                [5, 10, 15, 20, -1],
+                [5, 10, 15, 20, "All"]
+            ],
+            "pageLength": 20,
+            "dom": "<'row' <'col-md-12'B>><'row'<'col-md-6 col-sm-12'l><'col-md-6 col-sm-12'f>r><'table-scrollable't><'row'<'col-md-5 col-sm-12'i><'col-md-7 col-sm-12'p>>" // horizobtal scrollable datatable
+        });
+        yadcf.init(datatableFP_table, [{
+                filter_type: "text",
+                filter_delay: 500,
+                column_number: 0
+            }, {
+                filter_type: "text",
+                filter_delay: 500,
+                column_number: 1
+            }],
+            {
+                cumulative_filtering: false
+            });
+
+
+        $("#savePosting").off('click');
+        $("#savePosting").on('click', function(e){
+            e.preventDefault();
+            save_posting();
+        });
+
+        $("#UploadRawData").off('click');
+        $("#UploadRawData").on('click', function(e){
+            e.preventDefault();
+            upload_fp_data();
+        });
+
+        $("#UploadRawDataNew").off('click');
+        $("#UploadRawDataNew").on('click', function(e){
+            e.preventDefault();
+            upload_fp_data_new();
+        });
+    });
+
+    //Process Data Modal Open
+    function Process_Data()
+    {
+        $('#loading').hide();
+        $('#date_select').val('');
+        $('.form-group').removeClass('has-error');
+        $('.help-block').empty();
+        $('#posting_data_modal').modal({backdrop: 'static', keyboard: false});
+        $('.modal-title').text('Posting Monthly Attendance Data');
+    }
+
+    //Process Save Data in to ATT main tbl
+    function save_posting() {
+        var date_select = $('#date_select').val();
+        if (date_select != "") {
+            $('#loading').show();
+            $('.hide_btn_modal').hide();
+            $('#error_msg11').hide();
+            $.ajax({
+                type: "post",
+                async: true,
+                url: "<?php echo site_url('systems/file_upload_con/data_posting'); ?>",
+                data: {
+                    "date_select": date_select
+                },
+                dataType: "html",
+                success: function (data) {
+                    $('#loading').hide();
+                    $('.hide_btn_modal').show();
+                    if (data == 'error') {
+                        bootbox.alert('Error : No FP Data Available.');
+                    }  else {
+                        bootbox.alert("Successfully Posted.");
+                    }
+                }
+            });
+        } else {
+            $('#loading').hide();
+            bootbox.alert("Error : Please Select Month.");
+        }
+    }
+
+    $(function()
+    {
+        $(".month_select").datepicker( {
+            format: "yyyy-mm",
+            startView: "months",
+            minViewMode: "months",
+            autoclose:true
+        });
+    });
+    $('.month_select').datepicker({autoclose:true});
+
+    //UploadRawData Save
+    function upload_fp_data() {
+        var raw_upload_month = $('#raw_upload_month').val();
+        if (raw_upload_month != "") {
+            $('.loading_upload_data').show();
+            $('.warp_form').hide();
+
+            var file_data = $('#file_upload').prop('files')[0];
+            var form_data = new FormData();
+            form_data.append('file_upload', file_data);
+            form_data.append('raw_upload_month', $("#raw_upload_month").val());
+            form_data.append('<?php echo $this->security->get_csrf_token_name(); ?>', '<?php echo $this->security->get_csrf_hash(); ?>');
+            var url = "<?php echo site_url('systems/file_upload_con/upload_file'); ?>";
+            $.ajax({
+                url: url,
+                cache: false,
+                contentType: false,
+                processData: false,
+                data: form_data,
+                type: 'POST',
+                dataType: "JSON",
+                success: function (data) {
+                    $('.loading_upload_data').hide();
+                    $('.warp_form').show();
+                    $('#upload_file_form')[0].reset();
+                    if (data.status) {
+                        bootbox.alert(data.message);
+                        $('#upload_file').modal('hide');
+                        reload_table(datatableFP_table);
+                    }  else {
+                        bootbox.alert(data.message);
+                        //$('#upload_file').modal('hide');
+                        reload_table(datatableFP_table);
+                        //$('#load_leave1').html(data);
+                    }
+                }
+            });
+        } else {
+            $('#loading_upload_data').hide();
+            bootbox.alert("Error : Please Select Month.");
+        }
+    }
+
+    //UploadRawData Save
+    function upload_fp_data_new() {
+        var raw_upload_month_new = $('#raw_upload_month_new').val();
+        if (raw_upload_month_new != "") {
+            $('.loading_upload_data_new').show();
+            $('.warp_form_new').hide();
+
+            var file_data = $('#file_upload_new').prop('files')[0];
+            var form_data = new FormData();
+            form_data.append('file_upload_new', file_data);
+            form_data.append('raw_upload_month_new', $("#raw_upload_month_new").val());
+            form_data.append('<?php echo $this->security->get_csrf_token_name(); ?>', '<?php echo $this->security->get_csrf_hash(); ?>');
+            var url = "<?php echo site_url('systems/file_upload_con/upload_file_new'); ?>";
+
+            $.ajax({
+                url: url,
+                cache: false,
+                contentType: false,
+                processData: false,
+                data: form_data,
+                type: 'POST',
+                dataType: "JSON",
+                success: function (data) {
+                    $('.loading_upload_data_new').hide();
+                    $('.warp_form_new').show();
+                    $('#upload_file_new_form')[0].reset();
+                    if (data.status) {
+                        bootbox.alert(data.message);
+                        $('#upload_file_new').modal('hide');
+                        reload_table(datatableFP_table);
+                    } else {
+                        bootbox.alert(data.message);
+                        reload_table(datatableFP_table);
+                    }
+                }
+            });
+        } else {
+            $('#loading_upload_data_new').hide();
+            bootbox.alert("Error : Please Select Month.");
+        }
+    }
+
+    function reload_table(table)
+    {
+        if(typeof table !== "undefined")
+        {
+            table.ajax.reload(null,false);
+        }
+    }
+</script>

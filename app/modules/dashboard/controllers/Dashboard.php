@@ -33,9 +33,11 @@ class dashboard extends MX_Controller{
         $data["claim_kalutara"]=$monthly_kalutara;
         $data["claim_radial"]=$monthly_radial;
 
-        $data["kelaniya"]=number_format($monthly_kalutara/($monthly_kelaniya+$monthly_kalutara+$monthly_radial)*100,0,"","");
-        $data["kalutara"]=number_format($monthly_kelaniya/($monthly_kelaniya+$monthly_kalutara+$monthly_radial)*100,0,"","");
-        $data["radial"]=number_format($monthly_radial/($monthly_kelaniya+$monthly_kalutara+$monthly_radial)*100,0,"","");
+        $total = $monthly_kelaniya + $monthly_kalutara + $monthly_radial;
+
+        $data["kelaniya"] = $total ? number_format(($monthly_kelaniya / $total) * 100, 0, "", "") : 0;
+        $data["kalutara"] = $total ? number_format(($monthly_kalutara / $total) * 100, 0, "", "") : 0;
+        $data["radial"]   = $total ? number_format(($monthly_radial / $total) * 100, 0, "", "") : 0;
 
         $claim_day1= number_format($this->kcrud->getValueOne("tbl_insurance_claims","SUM(payable_amount) AS net_total","WHERE claim_date LIKE '".$date1."%'",null,null,null,null)->net_total ? : 0,"0","","");
         $claim_day2= number_format($this->kcrud->getValueOne("tbl_insurance_claims","SUM(payable_amount) AS net_total","WHERE claim_date LIKE '".$date2."%'",null,null,null,null)->net_total ? : 0,"0","","");
